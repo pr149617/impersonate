@@ -14,14 +14,17 @@ pipeline {
         }
 
         stage('Authenticate Jenkins to GCP') {
-            steps {
-                bat '''
-                    gcloud auth list
-                    gcloud config set project canvas-primacy-466005-f9
-                    echo Authenticated Jenkins runner to GCP using default credentials
+             steps {
+                withCredentials([file(credentialsId: 'jenkinssvckey', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                 bat '''
+                     gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%
+                     gcloud config set project canvas-primacy-466005-f9
+                     echo Authenticated Jenkins runner to GCP using impersonation
+                     gcloud auth list
                 '''
-            }
         }
+    }
+}
 
         stage('Terraform Init') {
             steps {
