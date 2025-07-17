@@ -40,18 +40,24 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                bat '''
-                    terraform plan -out=tfplan.out
-                '''
+                withCredentials([file(credentialsId: 'jenkinssvckey', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    bat '''
+                        set GOOGLE_APPLICATION_CREDENTIALS=%GOOGLE_APPLICATION_CREDENTIALS%
+                        terraform plan -out=tfplan.out
+                    '''
+                }
             }
         }
 
         stage('Terraform Apply') {
             steps {
                 input message: "Apply Terraform changes?"
-                bat '''
-                    terraform apply -auto-approve tfplan.out
-                '''
+                withCredentials([file(credentialsId: 'jenkinssvckey', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    bat '''
+                        set GOOGLE_APPLICATION_CREDENTIALS=%GOOGLE_APPLICATION_CREDENTIALS%
+                        terraform apply -auto-approve tfplan.out
+                    '''
+                }
             }
         }
     }
