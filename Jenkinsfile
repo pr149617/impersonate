@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PROJECT_ID = 'canvas-primacy-466005-f9'      // Your GCP project ID
-        IMPERSONATE_ACCOUNT = 'terraform-svc@canvas-primacy-466005-f9.iam.gserviceaccount.com'
+        PROJECT_ID = 'canvas-primacy-466005-f9'
+        GOOGLE_IMPERSONATE_SERVICE_ACCOUNT = 'terraform-svc@canvas-primacy-466005-f9.iam.gserviceaccount.com'
     }
 
     stages {
@@ -14,23 +14,27 @@ pipeline {
         }
 
         stage('Authenticate Jenkins to GCP') {
-             steps {
+            steps {
                 withCredentials([file(credentialsId: 'jenkinssvckey', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                 bat '''
-                     gcloud auth activate-service-account --key-file=%GOOGLE_APPLICATION_CREDENTIALS%
-                     gcloud config set project canvas-primacy-466005-f9
-                     echo Authenticated Jenkins runner to GCP using impersonation
-                     gcloud auth list
-                '''
+                    bat '''
+                        echo Authenticating with service account key
+                        gcloud auth activate-service-account --key-file="%GOOGLE_APPLICATION_CREDENTIALS%"
+                        gcloud config set project %PROJECT_ID%
+                        echo Impersonating: %GOOGLE_IMPERSONATE_SERVICE_ACCOUNT%
+                        gcloud auth list
+                    '''
+                }
+            }
         }
-    }
-}
 
         stage('Terraform Init') {
             steps {
-                bat '''
-                    terraform init
-                '''
+                withCredentials([file(credentialsId: 'jenkinssvckey', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    bat '''
+                        set GOOGLE_APPLICATION_CREDENTIALS=%GOOGLE_APPLICATION_CREDENTIALS%
+                        terraform init -backend-config="impersonate_service_account=%GOOGLE_IMPERSONATE_SERVICE_ACCOUNT%"
+                    '''
+                }
             }
         }
 
