@@ -1,5 +1,5 @@
 provider "google" {
-    project = "canvas-primacy-466005-f9 "
+    project = "canvas-primacy-466005-f9"
     
   impersonate_service_account = "terraform-svc@canvas-primacy-466005-f9.iam.gserviceaccount.com"
 }
